@@ -4,9 +4,9 @@ namespace App\Helper;
 
 use App\Entity\CategoriaAtividade;
 
-class CategoriaAtividadeFactory
+class CategoriaAtividadeFactory  implements EntityFactoryInterface
 {
-    public function criarCategoriaAtividade(string $json) : CategoriaAtividade
+    public function createEntity(string $json) : CategoriaAtividade
     {
         $dadosEmJson = json_decode($json);
 

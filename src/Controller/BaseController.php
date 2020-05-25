@@ -3,80 +3,88 @@
 namespace App\Controller;
 
 use App\Helper\ResponseFactory;
+use App\Entity\HypermidiaResponse;
 use App\Helper\ExtratorDadosRequest;
-use App\Helper\EntidadeFactoryInterface;
-use Doctrine\ORM\EntityManagerInterface;
+use App\Helper\EntityFactoryInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Doctrine\Common\Persistence\ObjectRepository;
-use Symfony\Component\HttpFoundation\JsonResponse;
+
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 
 abstract class BaseController  extends AbstractController
 {
     /**
-     * @var EntityManagerInterface
-     */
-    protected $entityManager;
-    /**
      * @var ObjectRepository
      */
     protected $repository;
     /**
-     * @var EntidadeFactoryInterface
+     * @var EntityFactoryInterface
      */
-    protected $factory;
+    protected $entityFactory;
+    /**
+     * @var ExtratorDadosRequest
+     */
+    protected $extratorDadosRequest;
 
     public function __construct(
-        EntityManagerInterface $entityManager,
-        ObjectRepository $repository,
-        EntidadeFactoryInterface $factory,
-        ExtratorDadosRequest $extratorDadosRequest
+        EntityFactoryInterface $entityFactory,         
+        ExtratorDadosRequest $extratorDadosRequest,
+        ObjectRepository $repository
     ) {
-        $this->entityManager = $entityManager;
+        $this->entityFactory = $entityFactory;
+        $this->extratorDadosRequest = $extratorDadosRequest;                
         $this->repository = $repository;
-        $this->factory = $factory;
-        $this->extratorDadosRequest = $extratorDadosRequest;        
     }
 
     public function novo(Request $request): Response
     {
-        $corpoRequisicao = $request->getContent();
-        $entidade = $this->factory->criarEntidade($corpoRequisicao);
+        $entity = $this->entityFactory->createEntity($request->getContent());
+        $entityManager = $this->getDoctrine()->getManager();
+        $entityManager->persist($entity);
+        $entityManager->flush();
 
-        $this->entityManager->persist($entidade);
-        $this->entityManager->flush();
-
-        return new JsonResponse($entidade);
+        return $this->json($entity, Response::HTTP_CREATED);
     }
 
     public function buscarTodos(Request $request)
     {
+        try {        
 
-        $filtro = $this->extratorDadosRequest->buscaDadosFiltro($request);
-        $informacoesDeOrdenacao = $this->extratorDadosRequest->buscaDadosOrdenacao($request);
-        [$paginaAtual, $itensPorPagina] = $this->extratorDadosRequest->buscaDadosPaginacao($request);
+            $filtro = $this->extratorDadosRequest->buscaDadosFiltro($request);
+            $informacoesDeOrdenacao = $this->extratorDadosRequest->buscaDadosOrdenacao($request);
+            [$paginaAtual, $itensPorPagina] = $this->extratorDadosRequest->buscaDadosPaginacao($request);
 
-        $lista = $this->repository->findBy(
-            $filtro,
-            $informacoesDeOrdenacao,
-            $itensPorPagina,
-            ($paginaAtual - 1) * $itensPorPagina
-        );
-        $fabricaResposta = new ResponseFactory(
-            true,
-            $lista,
-            Response::HTTP_OK,
-            $paginaAtual,
-            $itensPorPagina
-        );        
-
-        return $fabricaResposta->getResponse();
+            $lista = $this->repository->findBy(
+                $filtro,
+                $informacoesDeOrdenacao,
+                $itensPorPagina,
+                ($paginaAtual - 1) * $itensPorPagina
+            );
+            /*
+            $fabricaResposta = new ResponseFactory(
+                true,
+                $lista,
+                Response::HTTP_OK,
+                $paginaAtual,
+                $itensPorPagina
+            );       
+            */
+            $hypermidiaResponse = new HypermidiaResponse($lista, true, Response::HTTP_OK, $paginaAtual, $itensPorPagina);             
+        }catch(\Throwable $erro)
+        {
+            $hypermidiaResponse = HypermidiaResponse::fromError($erro);
+        }
+        
+        return $hypermidiaResponse->getResponse();
     }
 
     public function buscarUm($id): Response
     {
         $entidade = $this->repository->find($id);
+        $hypermidiaResponse = new HypermidiaResponse($entidade, true, Response::HTTP_OK, null);
+
+        /*
         $statusResposta = is_null($entidade)
             ? Response::HTTP_NO_CONTENT
             : Response::HTTP_OK;
@@ -85,42 +93,30 @@ abstract class BaseController  extends AbstractController
             $entidade,
             $statusResposta
         );
-
-        return $fabricaResposta->getResponse();
+        */ 
+        
+        return $hypermidiaResponse->getResponse();
     }
 
     public function remove($id): Response
     {
+        $entityManager = $this->getDoctrine()->getManager();
+
         $entidade = $this->repository->find($id);
-        $this->entityManager->remove($entidade);
-        $this->entityManager->flush();
+        $entityManager->remove($entidade);
+        $entityManager->flush();
 
         return new Response('', Response::HTTP_NO_CONTENT);
     }
     
     public function atualiza($id, Request $request): Response
     {
-        $corpoRequisicao = $request->getContent();
-        $entidade = $this->factory->criarEntidade($corpoRequisicao);
+        $entidade = $this->entityFactory->createEntity($request->getContent());
+        $entidadeExistente = $this->atualizaEntidadeExistente($id, $entidade);        
 
-        try {
-            $entidadeExistente = $this->atualizaEntidadeExistente($id, $entidade);
-            $this->entityManager->flush();
+        $this->getDoctrine()->getManager()->flush();
 
-            $fabrica = new ResponseFactory(
-                true,
-                $entidadeExistente,
-                Response::HTTP_OK
-            );
-            return $fabrica->getResponse();
-        } catch (\InvalidArgumentException $ex) {
-            $fabrica = new ResponseFactory(
-                false,
-                'Recurso não encontrado',
-                Response::HTTP_NOT_FOUND
-            );
-            return $fabrica->getResponse();
-        }
+        return $this->json($entidadeExistente);
     }
     
     abstract function atualizaEntidadeExistente($id, $entidade);

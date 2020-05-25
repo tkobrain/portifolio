@@ -5,7 +5,7 @@ namespace App\Helper;
 use App\Entity\Funcionario;
 use App\Repository\DepartamentoRepository;
 
-class FuncionarioFactory
+class FuncionarioFactory  implements EntityFactoryInterface
 {
     /**
      * @var DepartamentoRepository
@@ -17,7 +17,7 @@ class FuncionarioFactory
         $this->departamentoRepository = $departamentoRepository;
     }
 
-    public function criarFuncionario(string $json) : Funcionario
+    public function createEntity(string $json) : Funcionario
     {
         $dadosEmJson = json_decode($json);
         $IdDepartamento = $dadosEmJson->IdDepartamento;

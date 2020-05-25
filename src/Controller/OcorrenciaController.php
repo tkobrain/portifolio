@@ -15,15 +15,14 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 class OcorrenciaController extends BaseController
 {
     public function __construct(
-        EntityManagerInterface $entityManager,
         OcorrenciaFactory $ocorrenciaFactory,
-        OcorrenciaRepository $ocorrenciaRepository,
-        ExtratorDadosRequest $extratorDadosRequest        
+        ExtratorDadosRequest $extratorDadosRequest,
+        OcorrenciaRepository $ocorrenciaRepository
     )
     {
-        parent::__construct($entityManager, $ocorrenciaRepository, $ocorrenciaFactory, $extratorDadosRequest);
+        parent::__construct($ocorrenciaFactory, $extratorDadosRequest, $ocorrenciaRepository);
         $this->ocorrenciaFactory = $ocorrenciaFactory;   
-        $this->ocorrenciaRepository = $ocorrenciaRepository;             
+        //$this->ocorrenciaRepository = $ocorrenciaRepository;             
     }
 
     

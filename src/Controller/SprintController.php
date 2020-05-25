@@ -20,21 +20,20 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 class SprintController extends BaseController
 {
     public function __construct(
-        EntityManagerInterface $entityManager,
-        SprintFactory $sprintFactory,
-        SprintRepository $sprintRepository,
-        ExtratorDadosRequest $extratorDadosRequest                
+        SprintFactory $sprintFactory,        
+        ExtratorDadosRequest $extratorDadosRequest,
+        SprintRepository $sprintRepository
     )
     {
-        parent::__construct($entityManager, $sprintRepository, $sprintFactory, $extratorDadosRequest);        
-        $this->entityManager = $entityManager;
+        parent::__construct($sprintFactory, $extratorDadosRequest, $sprintRepository);
+        //$this->entityManager = $entityManager;
         $this->sprintFactory = $sprintFactory;
     }
 
     public function atualizaEntidadeExistente($id, $entidade)
     {
         /** @var Sprint $entidadeExistente */
-        $entidadeExistente = $this->repository->find($id);
+        $entidadeExistente = $this->getDoctrine()->getRepository(Sprint::class)->find($id);
         if (is_null($entidadeExistente)) {
             throw new \InvalidArgumentException();
         }

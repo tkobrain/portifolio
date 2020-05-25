@@ -3,10 +3,11 @@
 namespace App\Helper;
 
 use App\Entity\Aplicacao;
+use App\Helper\EntityFactoryInterface;
 
-class AplicacaoFactory
+class AplicacaoFactory  implements EntityFactoryInterface
 {
-    public function criarAplicacao(string $json) : Aplicacao
+    public function createEntity(string $json) : Aplicacao
     {
         $dadosEmJson = json_decode($json);
 

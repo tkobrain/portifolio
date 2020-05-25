@@ -4,9 +4,9 @@ namespace App\Helper;
 
 use App\Entity\Departamento;
 
-class DepartamentoFactory
+class DepartamentoFactory  implements EntityFactoryInterface
 {
-    public function criarDepartamento(string $json) : Departamento
+    public function createEntity(string $json) : Departamento
     {
         $dadosEmJson = json_decode($json);
 
