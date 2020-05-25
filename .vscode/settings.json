@@ -1,0 +1,13 @@
+{
+    "sqltools.connections": [
+        {
+            "database": "portifolio",
+            "dialect": "MySQL",
+            "name": "portifolio",
+            "password": "root@Tr1pl3t3ch",
+            "port": 3306,
+            "server": "localhost",
+            "username": "root"
+        }
+    ]
+}

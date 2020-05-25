@@ -1,0 +1,54 @@
+#index:
+#    path: /
+#    controller: App\Controller\DefaultController::index
+ocorrencias:
+    path: /ocorrencias
+    controller: App\Controller\OcorrenciaController::buscarTodos
+    methods:
+        - GET
+ocorrencia:
+    path: /ocorrencias/{id}
+    controller: App\Controller\OcorrenciaController::buscarUm
+    methods:
+        - GET
+nova_ocorrencia:
+    path: /ocorrencias
+    controller: App\Controller\OcorrenciaController::novo
+    methods:
+        - POST
+remove_ocorrencia:
+    path: /ocorrencias/{id}
+    controller: App\Controller\OcorrenciaController::remove
+    methods:
+        - DELETE
+atualiza_ocorrencia:
+    path: /ocorrencias/{id}
+    controller: App\Controller\OcorrenciaController::atualiza
+    methods:
+        - PUT
+
+sprints:
+    path: /sprints
+    controller: App\Controller\SprintController::buscarTodos
+    methods:
+        - GET
+sprint:
+    path: /sprints/{id}
+    controller: App\Controller\SprintController::buscarUm
+    methods:
+        - GET
+nova_sprint:
+    path: /sprints
+    controller: App\Controller\SprintController::novo
+    methods:
+        - POST
+remove_sprint:
+    path: /sprints/{id}
+    controller: App\Controller\SprintController::remove
+    methods:
+        - DELETE
+atualiza_sprint:
+    path: /sprints/{id}
+    controller: App\Controller\SprintController::atualiza
+    methods:
+        - PUT        
