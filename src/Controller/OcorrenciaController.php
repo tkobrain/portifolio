@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Helper\OcorrenciaFactory;
 use App\Controller\BaseController;
+use App\Entity\HypermidiaResponse;
 use App\Helper\ExtratorDadosRequest;
 use App\Repository\OcorrenciaRepository;
 use Doctrine\ORM\EntityManagerInterface;
@@ -22,20 +23,23 @@ class OcorrenciaController extends BaseController
     {
         parent::__construct($ocorrenciaFactory, $extratorDadosRequest, $ocorrenciaRepository);
         $this->ocorrenciaFactory = $ocorrenciaFactory;   
-        //$this->ocorrenciaRepository = $ocorrenciaRepository;             
     }
 
     
     /**
      * @Route("/sprints/{IdSprint}/ocorrencias", methods={"GET"})
      */
-    public function buscaPorSrint(string $IdSprint): Response
+    public function buscaPorSrint(string $IdSprint, Request $request): Response
     {
-        $ocorrencias = $this->ocorrenciaRepository->findBy([
-            'Sprint' => $IdSprint
-        ]);
+        $filterData = ['Sprint' => $IdSprint] + $this->extratorDadosRequest->buscaDadosFiltro($request);
+        $orderData = $this->extratorDadosRequest->buscaDadosOrdenacao($request);
+        $paginationData = $this->extratorDadosRequest->buscaDadosPaginacao($request);
+        $itemsPerPage = $_ENV['ITEMS_PER_PAGE'] ?? 10;
 
-        return new JsonResponse($ocorrencias);
+        $ocorrencias = $this->repository->findBy($filterData, $orderData, $itemsPerPage, ($paginationData - 1) * 10);
+
+        $hypermidiaResponse = new HypermidiaResponse($ocorrencias, true, Response::HTTP_OK, $paginationData, $itemsPerPage);
+        return $hypermidiaResponse->getResponse();
     }    
 
     public function atualizaEntidadeExistente($id, $entidade)

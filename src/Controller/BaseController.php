@@ -51,15 +51,18 @@ abstract class BaseController  extends AbstractController
     {
         try {        
 
-            $filtro = $this->extratorDadosRequest->buscaDadosFiltro($request);
-            $informacoesDeOrdenacao = $this->extratorDadosRequest->buscaDadosOrdenacao($request);
-            [$paginaAtual, $itensPorPagina] = $this->extratorDadosRequest->buscaDadosPaginacao($request);
+            $filterData = $this->extratorDadosRequest->buscaDadosFiltro($request);
+            $orderData = $this->extratorDadosRequest->buscaDadosOrdenacao($request);
+            $paginationData = $this->extratorDadosRequest->buscaDadosPaginacao($request);
+            $itemsPerPage = $_ENV['ITEMS_PER_PAGE'] ?? 10;            
+            //[$paginaAtual, $itensPorPagina] = $this->extratorDadosRequest->buscaDadosPaginacao($request);
+            //$itemsPerPage = $_ENV['ITEMS_PER_PAGE'] ?? 10;            
 
             $lista = $this->repository->findBy(
-                $filtro,
-                $informacoesDeOrdenacao,
-                $itensPorPagina,
-                ($paginaAtual - 1) * $itensPorPagina
+                $filterData,
+                $orderData,
+                $itemsPerPage,
+                ($paginationData - 1) * $itemsPerPage
             );
             /*
             $fabricaResposta = new ResponseFactory(
@@ -70,7 +73,7 @@ abstract class BaseController  extends AbstractController
                 $itensPorPagina
             );       
             */
-            $hypermidiaResponse = new HypermidiaResponse($lista, true, Response::HTTP_OK, $paginaAtual, $itensPorPagina);             
+            $hypermidiaResponse = new HypermidiaResponse($lista, true, Response::HTTP_OK, $paginationData, $itemsPerPage);             
         }catch(\Throwable $erro)
         {
             $hypermidiaResponse = HypermidiaResponse::fromError($erro);

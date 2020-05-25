@@ -4,18 +4,9 @@ namespace App\Controller;
 
 use App\Entity\Sprint;
 use App\Helper\SprintFactory;
-use Doctrine\ORM\EntityManager;
 use App\Controller\BaseController;
 use App\Helper\ExtratorDadosRequest;
 use App\Repository\SprintRepository;
-use Doctrine\ORM\EntityManagerInterface;
-use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\Routing\Annotation\Route;
-use Doctrine\ORM\Query\AST\Functions\FunctionNode;
-use Symfony\Component\HttpFoundation\JsonResponse;
-use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-
 
 class SprintController extends BaseController
 {
@@ -26,7 +17,6 @@ class SprintController extends BaseController
     )
     {
         parent::__construct($sprintFactory, $extratorDadosRequest, $sprintRepository);
-        //$this->entityManager = $entityManager;
         $this->sprintFactory = $sprintFactory;
     }
 

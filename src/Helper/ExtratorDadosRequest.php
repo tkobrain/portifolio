@@ -17,6 +17,7 @@ class ExtratorDadosRequest
             ? $queryString['page']
             : 1;
         unset($queryString['page']);
+
         $itensPorPagina = array_key_exists('itensPorPagina', $queryString)
             ? $queryString['itensPorPagina']
             : 5;
@@ -25,21 +26,21 @@ class ExtratorDadosRequest
         return [$queryString, $dadosOrdenacao, $paginaAtual, $itensPorPagina];
     }
 
-    public function buscaDadosOrdenacao(Request $request)
-    {
-        [, $ordenacao] = $this->buscaDadosRequest($request);
-        return $ordenacao;
-    }
-
     public function buscaDadosFiltro(Request $request)
     {
-        [$filtro, ] = $this->buscaDadosRequest($request);
-        return $filtro;
+        [$filterData, , ] = $this->buscaDadosRequest($request);
+        return $filterData;
+    }    
+
+    public function buscaDadosOrdenacao(Request $request)
+    {
+        [, $orderData, ] = $this->buscaDadosRequest($request);
+        return $orderData;
     }
 
     public function buscaDadosPaginacao(Request $request)
     {
-        [, , $paginaAtual, $itensPorPagina] = $this->buscaDadosRequest($request);
-        return [$paginaAtual, $itensPorPagina];
+        [, , $paginationData] = $this->buscaDadosRequest($request);
+        return $paginationData;
     }
 }
