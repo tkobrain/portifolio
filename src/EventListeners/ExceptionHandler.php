@@ -2,6 +2,7 @@
 
 namespace App\EventListeners;
 
+use Psr\Log\LoggerInterface;
 use App\Entity\HypermidiaResponse;
 use App\Helper\EntityFactoryException;
 use Symfony\Component\HttpFoundation\Response;
@@ -12,12 +13,18 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 class ExceptionHandler implements EventSubscriberInterface
 {
+    public function __construct(LoggerInterface $logger)
+    {
+        $this->logger = $logger;
+    }
+
     public static function getSubscribedEvents()
     {
         return [
             KernelEvents::EXCEPTION => [
                 ['handleEntityException', 1], //Metodo a ser implementado
-                ['handle404Exception', 0]
+                ['handle404Exception', 0],
+                ['handleGenericException', -10]
             ],
         ];
     }
@@ -41,4 +48,17 @@ class ExceptionHandler implements EventSubscriberInterface
             $event->setResponse($response);
         }
     }
+
+    public function handleGenericException(ExceptionEvent $event)
+    {
+       // if ($event->getResponse() instanceof EntityFactoryException) {
+            $this->logger->critical('Uma exceção ocorreu {stack}',
+            [
+                'stack' => $event->getThrowable()->getTraceAsString()
+            ]);
+
+            $response = HypermidiaResponse::fromError($event->getThrowable());
+            $event->setResponse($response->getResponse());
+        //}
+    }    
 }

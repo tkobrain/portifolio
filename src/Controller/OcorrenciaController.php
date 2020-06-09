@@ -2,10 +2,12 @@
 
 namespace App\Controller;
 
+use Psr\Log\LoggerInterface;
 use App\Helper\OcorrenciaFactory;
 use App\Controller\BaseController;
 use App\Entity\HypermidiaResponse;
 use App\Helper\ExtratorDadosRequest;
+use Psr\Cache\CacheItemPoolInterface;
 use App\Repository\OcorrenciaRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
@@ -18,10 +20,12 @@ class OcorrenciaController extends BaseController
     public function __construct(
         OcorrenciaFactory $ocorrenciaFactory,
         ExtratorDadosRequest $extratorDadosRequest,
-        OcorrenciaRepository $ocorrenciaRepository
+        OcorrenciaRepository $ocorrenciaRepository,
+        CacheItemPoolInterface $cache,
+        LoggerInterface $logger
     )
     {
-        parent::__construct($ocorrenciaFactory, $extratorDadosRequest, $ocorrenciaRepository);
+        parent::__construct($ocorrenciaFactory, $extratorDadosRequest, $ocorrenciaRepository,$cache, $logger);
         $this->ocorrenciaFactory = $ocorrenciaFactory;   
     }
 
@@ -57,5 +61,10 @@ class OcorrenciaController extends BaseController
             ->setAtividade($entidade->getAtividade());
 
         return $entidadeExistente;
-    }      
+    }    
+    
+    public function cachePrefix(): string
+    {
+        return 'sprint_';
+    }    
 }

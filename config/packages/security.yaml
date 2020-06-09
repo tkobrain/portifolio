@@ -12,9 +12,11 @@ security:
                 property: email
     firewalls:
         dev:
-            pattern: ^/(_(profiler|wdt)|css|images|js)/
+            #pattern: ^/(_*(profiler|wdt)|css|images|js|sprints_html)/
+            pattern: ^\/(?!.*(especialidades_html|login)).*$
             security: false
         main:
+            pattern: ^\/(?!.*(especialidades_html|login)).*$            
             anonymous: ~
             logout: ~
             guard:

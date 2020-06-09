@@ -2,14 +2,15 @@
 
 namespace App\Controller;
 
+use Psr\Log\LoggerInterface;
 use App\Helper\ResponseFactory;
 use App\Entity\HypermidiaResponse;
 use App\Helper\ExtratorDadosRequest;
+use Psr\Cache\CacheItemPoolInterface;
 use App\Helper\EntityFactoryInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Doctrine\Common\Persistence\ObjectRepository;
-
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 
 abstract class BaseController  extends AbstractController
@@ -30,11 +31,15 @@ abstract class BaseController  extends AbstractController
     public function __construct(
         EntityFactoryInterface $entityFactory,         
         ExtratorDadosRequest $extratorDadosRequest,
-        ObjectRepository $repository
+        ObjectRepository $repository,
+        CacheItemPoolInterface $cache,
+        LoggerInterface $logger
     ) {
         $this->entityFactory = $entityFactory;
         $this->extratorDadosRequest = $extratorDadosRequest;                
         $this->repository = $repository;
+        $this->cache = $cache;
+        $this->logger = $logger;
     }
 
     public function novo(Request $request): Response
@@ -43,6 +48,21 @@ abstract class BaseController  extends AbstractController
         $entityManager = $this->getDoctrine()->getManager();
         $entityManager->persist($entity);
         $entityManager->flush();
+
+        $cacheItem = $this->cache->getItem(
+            $this->cachePrefix().$entity->getId()
+        );
+
+        $cacheItem->set($entity);
+        $this->cache->save($cacheItem);
+
+        $this->logger
+            ->notice('Novo registro de {entidade} adicionado, ID: {id}.',
+            [
+                'entidade' => get_class($entity),
+                'id' => $entity->getId()
+            ]
+        );
 
         return $this->json($entity, Response::HTTP_CREATED);
     }
@@ -83,9 +103,17 @@ abstract class BaseController  extends AbstractController
     }
 
     public function buscarUm($id): Response
-    {
-        $entidade = $this->repository->find($id);
+    {   
+        //SUBSTITUIDO POR UTILIZACAO DE CACHE
+        //$entidade = $this->repository->find($id);
+
+        $entidade = $this->cache->hasItem($this->cachePrefix().$id) ? 
+            $this->cache->getItem($this->cachePrefix().$id)->get() :
+            $this->repository->find($id);        
+
         $hypermidiaResponse = new HypermidiaResponse($entidade, true, Response::HTTP_OK, null);
+
+
 
         /*
         $statusResposta = is_null($entidade)
@@ -109,6 +137,8 @@ abstract class BaseController  extends AbstractController
         $entityManager->remove($entidade);
         $entityManager->flush();
 
+        $this->cache->delete($this->cachePrefix().$id);
+
         return new Response('', Response::HTTP_NO_CONTENT);
     }
     
@@ -119,8 +149,13 @@ abstract class BaseController  extends AbstractController
 
         $this->getDoctrine()->getManager()->flush();
 
+        $cacheItem = $this->cache->getItem($this->cachePrefix() . $id);
+        $cacheItem->set($entidadeExistente);
+        $this->cache->save($cacheItem);        
+
         return $this->json($entidadeExistente);
     }
     
     abstract function atualizaEntidadeExistente($id, $entidade);
+    abstract function cachePrefix():string;
 }

@@ -3,20 +3,25 @@
 namespace App\Controller;
 
 use App\Entity\Sprint;
+use Psr\Log\LoggerInterface;
 use App\Helper\SprintFactory;
 use App\Controller\BaseController;
 use App\Helper\ExtratorDadosRequest;
 use App\Repository\SprintRepository;
+use Psr\Cache\CacheItemPoolInterface;
+use Symfony\Component\Routing\Annotation\Route;
 
 class SprintController extends BaseController
 {
     public function __construct(
         SprintFactory $sprintFactory,        
         ExtratorDadosRequest $extratorDadosRequest,
-        SprintRepository $sprintRepository
+        SprintRepository $sprintRepository,
+        CacheItemPoolInterface $cache,
+        LoggerInterface $logger
     )
     {
-        parent::__construct($sprintFactory, $extratorDadosRequest, $sprintRepository);
+        parent::__construct($sprintFactory, $extratorDadosRequest, $sprintRepository, $cache, $logger);
         $this->sprintFactory = $sprintFactory;
     }
 
@@ -34,5 +39,21 @@ class SprintController extends BaseController
 
         return $entidadeExistente;
     }    
+
+    public function cachePrefix(): string
+    {
+        return 'sprint_';
+    }
+    /**
+     * @Route ("/sprints_html")
+     */
+    public function sprintEmHtml()
+    {
+        $sprints = $this->repository->findAll();
+
+        return $this->render('Sprints.html.twig',[
+            'sprints'=>$sprints
+        ]);
+    }
 
 }
